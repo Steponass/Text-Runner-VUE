@@ -1,0 +1,11 @@
+{
+  "cityName": "Manchester",
+  "difficulty": "intermediate",
+  "text": "Manchester is a major city in northwest England with a rich industrial heritage. The city became the world's first industrialized city during the Industrial Revolution. Today Manchester is famous for its two football teams, vibrant music scene, and excellent universities. The city center features modern architecture alongside historic buildings. Manchester has a diverse population and thriving cultural life.",
+  "gapFrequency": 6,
+  "metadata": {
+    "wordCount": 89,
+    "estimatedTime": "3-5 minutes",
+    "focusAreas": ["adjectives", "prepositions"]
+  }
+}

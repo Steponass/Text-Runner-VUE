@@ -1,0 +1,72 @@
+:root {
+  /* Grayscale palette */
+  --color-black: #000000;
+  --color-gray-900: #1a1a1a;
+  --color-gray-800: #2d2d2d;
+  --color-gray-700: #404040;
+  --color-gray-600: #525252;
+  --color-gray-500: #737373;
+  --color-gray-400: #a3a3a3;
+  --color-gray-300: #d4d4d4;
+  --color-gray-200: #e5e5e5;
+  --color-gray-100: #f5f5f5;
+  --color-white: #ffffff;
+  
+  /* Semantic tokens */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-bg-primary: var(--color-white);
+  --color-bg-secondary: var(--color-gray-100);
+  --color-border-light: var(--color-gray-200);
+  --color-border-medium: var(--color-gray-300);
+  
+  --color-hover: var(--color-gray-100);
+  --color-pressed: var(--color-gray-200);
+  --color-focus: var(--color-gray-800);
+  
+  --space-4px: 4px;
+  --space-8px: 8px;
+  --space-12px: 12px;
+  --space-16px: 16px;
+  --space-20px: 20px;
+  --space-24px: 24px;
+  --space-32px: 32px;
+  --space-40px: 40px;
+  --space-48px: 48px;
+  
+  /* Typography scale  */
+  /* @link https://utopia.fyi/type/calculator?c=360,16,1.2,1920,18,1.333,6,1,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
+  /* Step -1: 13.3333px → 13.5034px */
+  --fontsize--1: clamp(0.8333rem, 0.8309rem + 0.0109vw, 0.844rem);
+  /* Step 0: 16px → 18px */
+  --fontsize-0: clamp(1rem, 0.9712rem + 0.1282vw, 1.125rem);
+  /* Step 1: 19.2px → 23.994px */
+  --fontsize-1: clamp(1.2rem, 1.1309rem + 0.3073vw, 1.4996rem);
+  /* Step 2: 23.04px → 31.984px */
+  --fontsize-2: clamp(1.44rem, 1.311rem + 0.5733vw, 1.999rem);
+  /* Step 3: 27.648px → 42.6347px */
+  --fontsize-3: clamp(1.728rem, 1.5118rem + 0.9607vw, 2.6647rem);
+  /* Step 4: 33.1776px → 56.832px */
+  --fontsize-4: clamp(2.0736rem, 1.7324rem + 1.5163vw, 3.552rem);
+  /* Step 5: 39.8131px → 75.7571px */
+  --fontsize-5: clamp(2.4883rem, 1.9699rem + 2.3041vw, 4.7348rem);
+  /* Step 6: 47.7757px → 100.9842px */
+  --fontsize-6: clamp(2.986rem, 2.2186rem + 3.4108vw, 6.3115rem);
+  
+  --border-radius-4px: 4px;
+  --border-radius-8px: 8px;
+  --border-radius-12px: 12px;
+  --border-radius-16px: 16px;
+  
+  --border-width-1px: 1px;
+  --border-width-2px: 2px;
+  --border-width-4px: 4px;
+  
+  /* Component constants */
+  --touch-target: 44px;
+  
+  /* Game-specific */
+  --platform-offset: 0px; /* Updated via JS */
+  --brick-min-width: 44px;
+  --avatar-position: 200px;
+}
