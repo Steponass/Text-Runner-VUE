@@ -15,16 +15,16 @@ interface GameState {
   score: number
   currentLevel: number
   gameStatus: GameStatus
-  
+
   currentLevelData: ProcessedLevelData | null
   levelProgress: LevelProgress
-  
+
   // Animation state
   platformOffset: number
   isAnimating: boolean
-  
+
   activeQuiz: QuizData | null
-  
+
   userProfile: UserProfile
 }
 
@@ -34,7 +34,7 @@ export const useGameStore = defineStore('game', {
     score: 0,
     currentLevel: 1,
     gameStatus: 'menu',
-    
+
     currentLevelData: null,
     levelProgress: {
       totalWords: 0,
@@ -42,12 +42,12 @@ export const useGameStore = defineStore('game', {
       gapsCompleted: 0,
       totalGaps: 0
     },
-    
+
     platformOffset: 0,
     isAnimating: false,
-    
+
     activeQuiz: null,
-    
+
     userProfile: {
       preferredDifficulty: 'intermediate',
       completedLevels: [],
@@ -83,31 +83,31 @@ export const useGameStore = defineStore('game', {
     async initializeLevel(levelData: LevelData): Promise<void> {
       try {
         this.gameStatus = 'loading'
-        
+
         // Process the level text into words and gaps
         const words = this.processLevelText(levelData.text)
         const gaps = this.calculateGaps(words, levelData.gapFrequency)
-        
+
         this.currentLevelData = {
           words,
           gaps,
           totalWords: words.length,
           totalGaps: gaps.length
         }
-        
+
         this.levelProgress = {
           totalWords: words.length,
           currentWordIndex: 0,
           gapsCompleted: 0,
           totalGaps: gaps.length
         }
-        
-        // Reset animation state 
+
+        // Reset animation state
         // Start platform at 200px so word 0 is under avatar
         this.platformOffset = 200
         this.isAnimating = false
         this.activeQuiz = null
-        
+
         this.gameStatus = 'playing'
       } catch (error) {
         console.error('Failed to initialize level:', error)
@@ -135,7 +135,7 @@ export const useGameStore = defineStore('game', {
     // Lose life with specified amount
     loseLife(amount: number = 0.5): void {
       this.lives = Math.max(0, this.lives - amount)
-      
+
       if (this.lives <= 0) {
         this.gameStatus = 'gameOver'
         this.isAnimating = false
@@ -149,9 +149,11 @@ export const useGameStore = defineStore('game', {
     fillGap(gapIndex: number): void {
       this.levelProgress.gapsCompleted += 1
       this.activeQuiz = null
-      
+
+        // Mark this specific gap as filled (you might want to track this)
+  console.log(`Gap ${gapIndex} has been filled`)
       this.addScore(10)
-      
+
       if (this.isLevelComplete) {
         this.gameStatus = 'complete'
         this.isAnimating = false
@@ -163,11 +165,11 @@ export const useGameStore = defineStore('game', {
     // Trigger quiz for a specific gap
     triggerQuiz(gapIndex: number): void {
       if (!this.currentLevelData) return
-      
+
       const correctWord = this.currentLevelData.words[gapIndex]
       const contextBefore = this.getContextBefore(gapIndex)
       const contextAfter = this.getContextAfter(gapIndex)
-      
+
       this.activeQuiz = {
         gapIndex,
         correctWord,
@@ -175,7 +177,7 @@ export const useGameStore = defineStore('game', {
         contextBefore,
         contextAfter
       }
-      
+
       // Pause animation during quiz
       this.isAnimating = false
     },
@@ -183,7 +185,7 @@ export const useGameStore = defineStore('game', {
     // Get context words before the gap
     getContextBefore(gapIndex: number): string {
       if (!this.currentLevelData) return ''
-      
+
       const words = this.currentLevelData.words
       const startIndex = Math.max(0, gapIndex - 3)
       return words.slice(startIndex, gapIndex).join(' ')
@@ -192,7 +194,7 @@ export const useGameStore = defineStore('game', {
     // Get context words after the gap
     getContextAfter(gapIndex: number): string {
       if (!this.currentLevelData) return ''
-      
+
       const words = this.currentLevelData.words
       const endIndex = Math.min(words.length, gapIndex + 4)
       return words.slice(gapIndex + 1, endIndex).join(' ')
