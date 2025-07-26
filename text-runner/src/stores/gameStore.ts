@@ -1,5 +1,12 @@
 import { defineStore } from 'pinia'
-import type { LevelData, ProcessedLevelData, QuizData, GameStatus, LevelProgress } from '@/types/game'
+import type {
+  LevelData,
+  ProcessedLevelData,
+  QuizData,
+  GameStatus,
+  LevelProgress,
+} from '@/types/game'
+import { useQuizGeneration } from '@/composables/useQuizGeneration'
 
 interface UserProfile {
   preferredDifficulty: 'beginner' | 'intermediate' | 'advanced'
@@ -40,7 +47,7 @@ export const useGameStore = defineStore('game', {
       totalWords: 0,
       currentWordIndex: 0,
       gapsCompleted: 0,
-      totalGaps: 0
+      totalGaps: 0,
     },
 
     platformOffset: 0,
@@ -53,16 +60,18 @@ export const useGameStore = defineStore('game', {
       completedLevels: [],
       settings: {
         hapticFeedback: true,
-        soundEffects: true
-      }
-    }
+        soundEffects: true,
+      },
+    },
   }),
 
   getters: {
     // Calculate completion percentage for progress bar
     completionPercentage: (state): number => {
       if (!state.levelProgress.totalWords) return 0
-      return Math.round((state.levelProgress.currentWordIndex / state.levelProgress.totalWords) * 100)
+      return Math.round(
+        (state.levelProgress.currentWordIndex / state.levelProgress.totalWords) * 100,
+      )
     },
 
     isGameOver: (state): boolean => {
@@ -76,7 +85,7 @@ export const useGameStore = defineStore('game', {
     // Format lives for display (handle half lives)
     displayLives: (state): string => {
       return state.lives % 1 === 0 ? state.lives.toString() : state.lives.toFixed(1)
-    }
+    },
   },
 
   actions: {
@@ -92,14 +101,14 @@ export const useGameStore = defineStore('game', {
           words,
           gaps,
           totalWords: words.length,
-          totalGaps: gaps.length
+          totalGaps: gaps.length,
         }
 
         this.levelProgress = {
           totalWords: words.length,
           currentWordIndex: 0,
           gapsCompleted: 0,
-          totalGaps: gaps.length
+          totalGaps: gaps.length,
         }
 
         // Reset animation state
@@ -120,7 +129,7 @@ export const useGameStore = defineStore('game', {
       return text
         .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
         .split(/\s+/) // Split on whitespace
-        .filter(word => word.length > 0) // Remove empty strings
+        .filter((word) => word.length > 0) // Remove empty strings
     },
 
     // Calculate which word indices should be gaps
@@ -150,8 +159,8 @@ export const useGameStore = defineStore('game', {
       this.levelProgress.gapsCompleted += 1
       this.activeQuiz = null
 
-        // Mark this specific gap as filled (you might want to track this)
-  console.log(`Gap ${gapIndex} has been filled`)
+      // Mark this specific gap as filled (you might want to track this)
+      console.log(`Gap ${gapIndex} has been filled`)
       this.addScore(10)
 
       if (this.isLevelComplete) {
@@ -170,12 +179,16 @@ export const useGameStore = defineStore('game', {
       const contextBefore = this.getContextBefore(gapIndex)
       const contextAfter = this.getContextAfter(gapIndex)
 
+      // Generate quiz options
+      const { generateQuizOptions } = useQuizGeneration()
+      const options = generateQuizOptions(correctWord)
+
       this.activeQuiz = {
         gapIndex,
         correctWord,
-        options: [], // Will be populated by quiz generation composable
+        options,
         contextBefore,
-        contextAfter
+        contextAfter,
       }
 
       // Pause animation during quiz
@@ -228,13 +241,13 @@ export const useGameStore = defineStore('game', {
         totalWords: 0,
         currentWordIndex: 0,
         gapsCompleted: 0,
-        totalGaps: 0
+        totalGaps: 0,
       }
     },
 
     nextLevel(): void {
       this.currentLevel += 1
       // Level loading will be handled by level loader composable
-    }
-  }
+    },
+  },
 })

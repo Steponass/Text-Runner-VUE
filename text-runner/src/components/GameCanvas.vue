@@ -25,10 +25,7 @@
 
       <!-- Moving Platform -->
       <div class="platform-container">
-        <div
-          class="platform"
-          :style="platformStyles"
-        >
+        <div class="platform" :style="platformStyles">
           <!-- Render word bricks in chunks for performance -->
           <BrickChunk
             v-for="chunkIndex in visibleChunks"
@@ -41,60 +38,46 @@
         </div>
       </div>
 
-      <!-- Platform Ground Line -->
-      <div class="platform-ground"></div>
     </div>
 
-    <!-- Quiz Interface (appears when quiz is active) -->
+    <!-- Quiz Interface -->
     <QuizInterface />
 
-    <!-- Debug Info (development only) -->
-    <div v-if="showDebugInfo" class="debug-info">
-      <p>Platform Offset: {{ Math.round(platformOffset) }}px</p>
-      <p>Current Word: {{ getCurrentWordIndex() }}</p>
-      <p>Speed: {{ animationSpeed }}px/frame</p>
-      <p>Next Gap: {{ getNextGapIndex() }}</p>
-      <p>Quiz Active: {{ gameStore.activeQuiz ? 'Yes' : 'No' }}</p>
-      <p>Quiz Mode: {{ collisionDetection?.isQuizMode ? 'Yes' : 'No' }}</p>
+    <!-- Game Start Button (when not playing) -->
+    <div v-if="gameStore.gameStatus !== 'playing'" class="game-overlay">
+      <div class="start-screen">
+        <h1>Text Runner</h1>
+        <p>Fill in the missing words to help your character cross safely!</p>
+        <button @click="startGame" class="start-button">
+          {{ gameStore.gameStatus === 'menu' ? 'Start Game' : 'Continue' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useGameStore } from '@/stores/gameStore'
 import { useGameAnimation } from '@/composables/useGameAnimation'
 import { useCollisionDetection } from '@/composables/useCollisionDetection'
 import BrickChunk from './BrickChunk.vue'
 import QuizInterface from './QuizInterface.vue'
 
-// Props
-interface GameCanvasProps {
-  showDebugInfo?: boolean
-}
-
-withDefaults(defineProps<GameCanvasProps>(), {
-  showDebugInfo: false
-})
-
 // Stores and composables
 const gameStore = useGameStore()
-const {
-  platformOffset,
-  animationSpeed,
-  getCurrentWordIndex
-} = useGameAnimation()
+const { platformOffset, getCurrentWordIndex, startAnimation, resetAnimation } = useGameAnimation()
 
-// Initialize collision detection (this starts the gap detection system)
-const collisionDetection = useCollisionDetection()
+// Initialize collision detection
+useCollisionDetection()
 
 // Constants for performance optimization
-const chunkSize = 25 // Words per chunk
-const visibleChunkBuffer = 2 // Extra chunks to render on each side
+const chunkSize = 25
+const visibleChunkBuffer = 2
 
 // Avatar styles (fixed position)
 const avatarStyles = computed(() => ({
-  left: `200px`, // var(--avatar-position) = 200px
+  left: `200px`,
   transform: 'translateX(-50%)'
 }))
 
@@ -104,18 +87,14 @@ const platformStyles = computed(() => ({
   willChange: 'transform'
 }))
 
-// Calculate which chunks are visible
+// Calculate visible chunks for performance
 const visibleChunks = computed(() => {
   if (!gameStore.currentLevelData) return []
 
   const totalWords = gameStore.currentLevelData.totalWords
   const totalChunks = Math.ceil(totalWords / chunkSize)
-
-  // Calculate which chunk the avatar is currently viewing
   const currentWordIndex = getCurrentWordIndex()
   const currentChunk = Math.floor(currentWordIndex / chunkSize)
-
-  // Render current chunk plus buffer chunks on each side
   const startChunk = Math.max(0, currentChunk - visibleChunkBuffer)
   const endChunk = Math.min(totalChunks - 1, currentChunk + visibleChunkBuffer)
 
@@ -123,7 +102,6 @@ const visibleChunks = computed(() => {
   for (let i = startChunk; i <= endChunk; i++) {
     chunks.push(i)
   }
-
   return chunks
 })
 
@@ -132,25 +110,25 @@ const getChunkWords = (chunkIndex: number): string[] => {
   if (!gameStore.currentLevelData) return []
 
   const startIndex = chunkIndex * chunkSize
-  const endIndex = Math.min(
-    startIndex + chunkSize,
-    gameStore.currentLevelData.totalWords
-  )
-
+  const endIndex = Math.min(startIndex + chunkSize, gameStore.currentLevelData.totalWords)
   return gameStore.currentLevelData.words.slice(startIndex, endIndex)
 }
 
-// Get the index of the next gap
-const getNextGapIndex = (): number | null => {
-  if (!gameStore.currentLevelData) return null
-
-  const currentIndex = getCurrentWordIndex()
-  const nextGap = gameStore.currentLevelData.gaps.find(
-    gapIndex => gapIndex > currentIndex
-  )
-
-  return nextGap ?? null
+// Start the game
+const startGame = () => {
+  if (gameStore.gameStatus === 'menu' || gameStore.gameStatus === 'complete') {
+    resetAnimation()
+    gameStore.gameStatus = 'playing'
+  }
+  startAnimation()
 }
+
+// Auto-start when level is loaded
+onMounted(() => {
+  if (gameStore.currentLevelData && gameStore.gameStatus === 'playing') {
+    startAnimation()
+  }
+})
 </script>
 
 <style scoped>
@@ -227,7 +205,6 @@ const getNextGapIndex = (): number | null => {
   position: relative;
 }
 
-/* Simple human silhouette shape */
 .avatar-silhouette::before {
   content: '';
   position: absolute;
@@ -243,7 +220,7 @@ const getNextGapIndex = (): number | null => {
 .platform-container {
   position: relative;
   width: 100%;
-  height: 120px;
+  height: 220px;
   overflow: hidden;
 }
 
@@ -268,23 +245,60 @@ const getNextGapIndex = (): number | null => {
   z-index: 1;
 }
 
-.debug-info {
+.game-overlay {
   position: fixed;
-  bottom: var(--space-16px);
-  right: var(--space-16px);
-  background: var(--color-bg-primary);
-  border: var(--border-width-1px) solid var(--color-border-medium);
-  border-radius: var(--border-radius-4px);
-  padding: var(--space-8px) var(--space-12px);
-  font-family: monospace;
-  font-size: var(--fontsize--1);
-  z-index: 100;
-  max-width: 200px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.debug-info p {
-  margin: var(--space-2px) 0;
+.start-screen {
+  background: var(--color-bg-primary);
+  padding: var(--space-32px);
+  border-radius: var(--border-radius-16px);
+  text-align: center;
+  max-width: 400px;
+  margin: var(--space-16px);
+}
+
+.start-screen h1 {
+  font-size: var(--fontsize-3);
+  margin-bottom: var(--space-16px);
+  color: var(--color-text-primary);
+}
+
+.start-screen p {
+  font-size: var(--fontsize-0);
   color: var(--color-text-secondary);
+  margin-bottom: var(--space-24px);
+  line-height: 1.5;
+}
+
+.start-button {
+  padding: var(--space-16px) var(--space-32px);
+  background: var(--color-gray-900);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--border-radius-8px);
+  font-size: var(--fontsize-0);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.start-button:hover {
+  background: var(--color-gray-800);
+  transform: translateY(-2px);
+}
+
+.start-button:active {
+  transform: translateY(0);
 }
 
 /* Mobile optimizations */
@@ -303,15 +317,13 @@ const getNextGapIndex = (): number | null => {
     height: 42px;
   }
 
-  .debug-info {
-    bottom: var(--space-8px);
-    right: var(--space-8px);
-    font-size: calc(var(--fontsize--1) * 0.9);
+  .start-screen {
+    padding: var(--space-24px);
+    margin: var(--space-12px);
   }
-}
 
-/* Ensure quiz interface appears above everything else */
-:deep(.quiz-interface) {
-  z-index: 200;
+  .start-screen h1 {
+    font-size: var(--fontsize-2);
+  }
 }
 </style>
